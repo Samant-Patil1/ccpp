@@ -57,6 +57,17 @@ the Supabase database once you configure it.
 By default the app runs in local mode. To store messages permanently in
 Supabase (visible from every device), follow these steps once.
 
+> This app has no real authentication — the shared password `SI96305` is the
+> only gate. For the same reason, Row Level Security is **disabled** on the
+> `messages` table: the publishable key must be allowed to read and write it.
+
+0. **Disable Row Level Security** (only needed once, when you first create
+   the table). Run in the SQL Editor:
+
+   ```sql
+   alter table messages disable row level security;
+   ```
+
 1. **Create the table.** In the Supabase dashboard open **SQL Editor** and run:
 
    ```sql

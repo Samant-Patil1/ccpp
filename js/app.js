@@ -1,13 +1,12 @@
 import { checkLogin } from './lib/validate.js';
 import { createBackend } from './db.js';
-import { firebaseConfig } from '../firebase-config.js';
 import { initChat } from './chat.js';
 import { initComposer } from './composer.js';
 
 const $ = (id) => document.getElementById(id);
 
-const SESSION_KEY = 'ism.session';
-const MUTE_KEY = 'ism.muted';
+const SESSION_KEY = 'si.session';
+const MUTE_KEY = 'si.muted';
 
 // localStorage adapter with cross-tab change notification (storage events).
 export function browserKv() {
@@ -36,14 +35,14 @@ function applyMuteIcon() {
 }
 
 // Session is scoped per browser tab (sessionStorage holds a stable tab id;
-// localStorage holds the user for that tab). This lets demo mode run as two
-// different users in two tabs of the same browser — each tab restores its
-// own identity on reload.
+// localStorage holds the signed-in user for that tab). This lets both users
+// chat at the same time in two tabs of the same browser — each tab restores
+// its own identity on reload.
 function sessionKey() {
-  let id = sessionStorage.getItem('ism.tab');
+  let id = sessionStorage.getItem('si.tab');
   if (!id) {
     id = globalThis.crypto?.randomUUID?.() ?? `tab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    sessionStorage.setItem('ism.tab', id);
+    sessionStorage.setItem('si.tab', id);
   }
   return `${SESSION_KEY}.${id}`;
 }
@@ -52,7 +51,7 @@ async function startChat(user) {
   $('login-screen').classList.add('hidden');
   $('chat-screen').classList.remove('hidden');
 
-  const peer = user === 'Ishu' ? 'Sammy' : 'Ishu';
+  const peer = user === 'S' ? 'I' : 'S';
   $('my-name').textContent = user;
   $('my-avatar').textContent = user[0];
   $('peer-name').textContent = peer;
@@ -60,17 +59,15 @@ async function startChat(user) {
   $('peer-avatar').textContent = peer[0];
   $('peer-avatar2').textContent = peer[0];
 
-  const { backend, demo } = await createBackend(firebaseConfig, user, browserKv());
-  if (demo) $('demo-banner').classList.remove('hidden');
+  const { backend, local } = await createBackend(user, browserKv());
+  if (local) $('local-banner').classList.remove('hidden');
 
   backend.onConnection((online) => $('conn-status').classList.toggle('hidden', online));
 
   const els = {
-    list: $('message-list'), typingBubble: $('typing-bubble'),
-    typingText: $('typing-text'), typingFrom: $('typing-from'),
-    scrollBottom: $('scroll-bottom'), lightbox: $('lightbox'),
-    lightboxImg: $('lightbox-img'), itemPreview: $('chat-item-preview'),
-    itemTime: $('chat-item-time'),
+    list: $('message-list'), scrollBottom: $('scroll-bottom'),
+    lightbox: $('lightbox'), lightboxImg: $('lightbox-img'),
+    itemPreview: $('chat-item-preview'), itemTime: $('chat-item-time'),
   };
 
   const composer = initComposer({
@@ -95,11 +92,9 @@ async function startChat(user) {
   });
 
   $('logout-btn').addEventListener('click', () => {
-    backend.clearPresence();
     localStorage.removeItem(sessionKey());
     location.reload();
   });
-  window.addEventListener('beforeunload', () => backend.clearPresence());
 }
 
 $('login-form').addEventListener('submit', (e) => {
@@ -115,6 +110,6 @@ $('login-form').addEventListener('submit', (e) => {
   startChat(result.user);
 });
 
-// Restore session on reload (session value is just the validated username).
+// Restore session on reload (the stored value is just the validated username).
 const saved = localStorage.getItem(sessionKey());
-if (saved === 'Ishu' || saved === 'Sammy') startChat(saved);
+if (saved === 'S' || saved === 'I') startChat(saved);

@@ -28,7 +28,3 @@ export function replyPreviewFor(msg) {
   const text = msg.text || '';
   return text.length > 60 ? text.slice(0, 60) + '…' : text;
 }
-
-export function isStaleDraft(ts, nowTs = Date.now()) {
-  return nowTs - ts > 30_000;
-}

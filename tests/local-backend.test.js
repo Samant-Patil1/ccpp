@@ -32,7 +32,7 @@ test('sendMessage persists, fills id/ts, and notifies subscribers', async () => 
   await a.init();
   const seen = [];
   a.subscribeMessages((m) => seen.push(m));
-  const msg = await a.sendMessage({ from: 'Ishu', type: 'text', text: 'hi', replyTo: null });
+  const msg = await a.sendMessage({ from: 'S', type: 'text', text: 'hi', replyTo: null });
   assert.equal(msg.text, 'hi');
   assert.ok(msg.id && typeof msg.ts === 'number');
   assert.equal(seen.at(-1).length, 1);
@@ -47,8 +47,8 @@ test('a second instance sees messages after an external storage event', async ()
   await b.init();
   const seen = [];
   b.subscribeMessages((m) => seen.push(m));
-  await a.sendMessage({ from: 'Sammy', type: 'text', text: 'yo', replyTo: null });
-  kv.external('ism.messages');
+  await a.sendMessage({ from: 'I', type: 'text', text: 'yo', replyTo: null });
+  kv.external('si.messages');
   assert.equal(seen.at(-1)[0].text, 'yo');
 });
 
@@ -56,29 +56,12 @@ test('messages persist across re-instantiation (same kv)', async () => {
   const kv = makeKv();
   const a = new LocalBackend(kv);
   await a.init();
-  await a.sendMessage({ from: 'Ishu', type: 'text', text: 'still here', replyTo: null });
+  await a.sendMessage({ from: 'S', type: 'text', text: 'still here', replyTo: null });
   const b = new LocalBackend(kv); // "reopen the browser"
   await b.init();
   const seen = [];
   b.subscribeMessages((m) => seen.push(m));
   assert.equal(seen.at(-1)[0].text, 'still here');
-});
-
-test('typing drafts sync across instances and clear on empty', async () => {
-  const kv = makeKv();
-  const a = new LocalBackend(kv, 'Ishu');
-  const b = new LocalBackend(kv, 'Sammy');
-  await a.init();
-  await b.init();
-  const drafts = [];
-  b.subscribeTyping('Ishu', (d) => drafts.push(d));
-  a.setTyping('hello wor');
-  kv.external('ism.typing.Ishu');
-  assert.equal(drafts.at(-1).text, 'hello wor');
-  assert.equal(typeof drafts.at(-1).ts, 'number');
-  a.setTyping('');
-  kv.external('ism.typing.Ishu');
-  assert.equal(drafts.at(-1), null);
 });
 
 test('unsubscribe stops notifications', async () => {
@@ -89,6 +72,6 @@ test('unsubscribe stops notifications', async () => {
   const off = a.subscribeMessages(() => n++);
   n = 0; // ignore the immediate snapshot call
   off();
-  await a.sendMessage({ from: 'Ishu', type: 'text', text: 'x', replyTo: null });
+  await a.sendMessage({ from: 'S', type: 'text', text: 'x', replyTo: null });
   assert.equal(n, 0);
 });

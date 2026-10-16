@@ -1,19 +1,19 @@
-const MESSAGES_KEY = 'ism.messages';
-const typingKey = (u) => `ism.typing.${u}`;
-const TYPING_PREFIX = 'ism.typing.';
+const MESSAGES_KEY = 'si.messages';
 
 function makeId() {
   return globalThis.crypto?.randomUUID?.()
     ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+// localStorage-backed store. After every message the whole history is
+// re-serialised to JSON (timestamp, sender and content included), so the
+// browser always holds a complete log under a single key.
 export class LocalBackend {
   constructor(kv, me = '') {
     this.kv = kv;
     this.me = me;
     this.kind = 'local';
     this._msgCbs = new Set();
-    this._typCbs = new Map(); // user → Set<cb>
     this._connCbs = new Set();
     this._unsubKv = kv.subscribe?.((key) => this._onExternal(key));
   }
@@ -48,27 +48,9 @@ export class LocalBackend {
     return () => this._msgCbs.delete(cb);
   }
 
-  setTyping(text) {
-    if (!this.me) return;
-    if (text) this.kv.setItem(typingKey(this.me), JSON.stringify({ text, ts: Date.now() }));
-    else this.kv.removeItem(typingKey(this.me));
-    this._notifyTyping(this.me);
-  }
-
-  subscribeTyping(user, cb) {
-    if (!this._typCbs.has(user)) this._typCbs.set(user, new Set());
-    this._typCbs.get(user).add(cb);
-    cb(this._readTyping(user)); // immediate snapshot, like subscribeMessages
-    return () => this._typCbs.get(user)?.delete(cb);
-  }
-
   onConnection(cb) {
     this._connCbs.add(cb);
     return () => this._connCbs.delete(cb);
-  }
-
-  clearPresence() {
-    this.setTyping('');
   }
 
   _readMessages() {
@@ -90,27 +72,11 @@ export class LocalBackend {
     for (const cb of this._msgCbs) cb(msgs);
   }
 
-  _readTyping(user) {
-    try {
-      const raw = this.kv.getItem(typingKey(user));
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  _notifyTyping(user) {
-    const draft = this._readTyping(user);
-    const cbs = this._typCbs.get(user);
-    if (cbs) for (const cb of cbs) cb(draft);
-  }
-
   _emitConn(online) {
     for (const cb of this._connCbs) cb(online);
   }
 
   _onExternal(key) {
     if (key === MESSAGES_KEY) this._notifyMessages();
-    else if (key.startsWith(TYPING_PREFIX)) this._notifyTyping(key.slice(TYPING_PREFIX.length));
   }
 }

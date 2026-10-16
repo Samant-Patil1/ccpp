@@ -1,123 +1,87 @@
-# 💬 ccp — Ishu & Sammy's Chat
+# 💬 ccpp — S & I's Chat
 
-A WhatsApp-style 1:1 chat web app. **Live typing preview** (the other person
-sees what you're typing before you send), replies, emojis, photos, PDFs and
-file attachments, and a login gate — hosted free on GitHub Pages with Firebase
-Realtime Database for permanent message storage.
+A WhatsApp-style 1:1 chat web app for exactly two users, **S** and **I**.
+Static, no build step, hosted free on GitHub Pages — and it works entirely
+without any backend.
 
-**Users:** `Ishu` and `Sammy` · **Password:** `SI96305`
+**Users:** `S` and `I` · **Password:** `SI96305` (shared by both)
 
 ## Features
 
-- **Live typing preview** — your draft appears on the other side, keystroke by
-  keystroke, before you hit Enter. Messages commit on Enter (Shift+Enter =
-  newline) or the send button.
-- **Reply** to any message — hover ↩ on desktop, swipe right on mobile.
-  Tapping a quoted block jumps to the original message.
-- **Built-in emoji picker** — ~1,100 emojis across 8 categories, no external
-  services. Click to insert at the cursor.
-- **Attachments** — photos render inline (auto-compressed to 1600px), PDFs and
-  other files show as download cards (max ~1 MB per file; bigger files get a
-  friendly error instead of a crash).
-- **Permanent history** in Firebase Realtime Database. Until Firebase is
-  configured, the app runs in **demo mode** (localStorage, this browser only)
-  so everything works out of the box — including two users in two tabs.
-- **Sound notification** on new messages (mutable 🔕), date separators,
-  connection indicator, responsive down to phones.
-- **Glitchproof** — missing Firebase config, CDN hiccups, oversize files, and
-  dropped connections all degrade gracefully; the app never hard-crashes.
+- **WhatsApp-like conversation** — sidebar with both contacts, message bubbles,
+  date separators, message previews, sounds, and a connection indicator.
+- **Multiline messages** — the composer grows as you type. `Enter` sends,
+  `Shift+ + Enter` inserts a new line.
+- **Visible while you type** — whatever you have typed is visible in the
+  composer as you type it (that's simply how a text field behaves). No
+  "live typing" preview is shown to the other person.
+- **Built-in emoji picker** — ~1,000 emojis in 8 categories, inserted at the
+  cursor. No external services.
+- **Attachments** — photos render inline (auto-compressed to 1600px) and open
+  in a lightbox; other files send as download cards (up to ~1 MB).
+- **Replies** — hover ↩ (desktop) or swipe right (mobile) on any message to
+  reply; the quoted block shows what you're replying to and can be tapped to
+  jump to the original message.
+- **Responsive** — usable on phones as well as desktops.
 
-## One-time setup (≈5 minutes)
+## Storage
 
-> 📖 A beginner-friendly, click-by-click version of these steps — with exact
-> button names and a troubleshooting table — lives in
-> **[FIREBASE_SETUP.md](FIREBASE_SETUP.md)**.
+Messages are kept in the browser's **localStorage**. After every message the
+whole store is re-serialised to **JSON** — including the timestamp, the
+sender and the content — and written back under one key, so the browser always
+holds a complete history:
 
-### 1. Create the Firebase project
-
-1. Go to <https://console.firebase.google.com> and sign in with a Google account.
-2. Click **Add project** → name it (e.g. `ccp`) → Continue →
-   **disable Google Analytics** (not needed) → **Create project**.
-3. Left menu: **Build → Realtime Database → Create Database** →
-   pick the location closest to you → **Start in test mode**.
-4. Open the **Rules** tab, paste the rules below, and click **Publish**:
-
-```json
-{
-  "rules": {
-    "messages": {
-      ".read": true,
-      "$msgId": {
-        ".write": true,
-        ".validate": "newData.hasChildren(['from', 'type', 'ts']) && (newData.child('type').val() == 'text' || newData.child('type').val() == 'image' || newData.child('type').val() == 'file')",
-        "from": { ".validate": "newData.val() == 'Ishu' || newData.val() == 'Sammy'" },
-        "text": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 4000)" },
-        "dataUrl": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 3000000)" },
-        "fileName": { ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 200)" },
-        "$other": { ".validate": true }
-      }
-    },
-    "typing": {
-      ".read": true,
-      "$user": {
-        ".write": true,
-        "text": { ".validate": "newData.isString() && newData.val().length <= 4000" }
-      }
-    }
-  }
-}
+```
+si.messages = '[{"id":"…","ts":1760000000000,"from":"S","type":"text","text":"hi"}, …]'
 ```
 
-### 2. Paste your config into the app
+Two browser tabs can chat at the same time — each tab keeps its own signed-in
+user and its own session, while both tabs share the same message store.
 
-1. Firebase console → **Project settings** (gear icon) → **Your apps** →
-   click the **Web** icon (`</>`) → register app (nickname e.g. `chat`) →
-   **Register app**.
-2. Copy the `firebaseConfig` object shown.
-3. In this repo, open **`firebase-config.js`** and replace the placeholder
-   values with yours. Commit and push.
+> Why not a JSON file edited on the server? GitHub Pages only *serves* files —
+> browsers cannot write back to the host. Nothing would ever persist, so
+> localStorage is the only storage that works on a static site.
 
-While placeholders remain, the app runs in **demo mode**: everything works,
-but messages live only in the browser's localStorage — handy for trying it
-with two tabs (log in as Ishu in one, Sammy in the other). After pasting real
-config, messages sync permanently through Firebase across devices.
+## Setup
 
-### 3. Enable GitHub Pages
+### 1. Enable GitHub Pages
 
 1. Repo → **Settings → Pages**.
 2. **Source**: Deploy from a branch → **Branch: `main`** → **Folder: `/ (root)`** → **Save**.
-3. Wait ~1 minute; the site goes live at
-   `https://<your-username>.github.io/ccp/`.
+3. Wait about a minute; the site goes live at
+   `https://<your-username>.github.io/ccpp/`.
 
-Open the URL on two devices (or two browser windows), log in as Ishu on one
-and Sammy on the other, and chat away.
+### 2. Log in and chat
 
-## Security note
-
-This is a personal chat, not a vault. On static hosting the password lives in
-the code, and the Firebase rules above let anyone with the database URL read
-and write messages. It keeps strangers out only because they don't know the
-URL and password — don't reuse `SI96305` anywhere else.
+Open the URL (or serve it locally — see below), sign in as `S` or `I` with
+the password `SI96305`, and chat away. Open the same URL in a second tab or
+browser window to chat with the other user.
 
 ## Running locally
 
 ```bash
-npm run serve     # http://localhost:8080 (demo mode without Firebase config)
-npm test          # unit tests for the logic modules
+npm run serve     # http://localhost:8080 (static server)
+npm test          # unit tests for the logic modules (Node's built-in runner)
 ```
 
-No dependencies to install — tests use Node's built-in runner.
+No dependencies need installing — tests use Node's built-in runner.
 
 ## How it works
 
-- `index.html` + `css/style.css` + ES modules in `js/` — no build step.
-- `js/db.js` picks Firebase (real-time, permanent) or a localStorage
-  fallback (demo mode). The Firebase SDK loads dynamically, so a CDN failure
-  degrades to demo mode instead of crashing the app.
-- Live typing: drafts sync to `/typing/{user}` on every keystroke (throttled
-  150 ms); the peer renders them as an ephemeral bubble that also respects a
-  30-second staleness guard.
-- Attachments: images are downscaled to 1600px in the browser before sending;
-  files up to ~1 MB ride along as base64 data URLs. Larger files get a
-  friendly inline error.
-- All user text is rendered via `textContent` — no HTML injection possible.
+- `index.html` + `css/style.css` + ES modules in `js/` — no build step, so it
+  deploys unchanged to GitHub Pages.
+- `js/app.js` bootstraps the UI, manages the per-tab login session and wires
+  the composer and message list.
+- `js/chat.js` renders incoming/outgoing messages, day separators, replies and
+  the "scroll to latest" button.
+- `js/composer.js` handles the input (multiline, `Enter` to send), the emoji
+  picker and file attachments.
+- `js/db/local-backend.js` persists messages as a JSON array in localStorage
+  and notifies every open tab about changes.
+- All user text is rendered with `textContent` — no HTML injection is possible.
+
+## Security note
+
+This is a personal chat, not a vault. The password lives in the code, and the
+storage is local to each browser. It keeps strangers out only because they
+don't know the URL and password — don't reuse `SI96305` anywhere else.

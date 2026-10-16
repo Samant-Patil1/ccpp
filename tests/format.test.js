@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { formatTime, formatDayLabel, formatFileSize, replyPreviewFor, isStaleDraft } from '../js/lib/format.js';
+import { formatTime, formatDayLabel, formatFileSize, replyPreviewFor } from '../js/lib/format.js';
 
 const at = (y, m, d, h = 0, min = 0) => new Date(y, m - 1, d, h, min).getTime();
 
@@ -30,10 +30,4 @@ test('replyPreviewFor summarizes text, image, and file messages', () => {
   assert.equal(replyPreviewFor({ type: 'image', fileName: 'cat.jpg' }), '📷 Photo');
   assert.equal(replyPreviewFor({ type: 'file', fileName: 'notes.pdf' }), 'notes.pdf');
   assert.equal(replyPreviewFor({ type: 'file' }), '📎 File');
-});
-
-test('isStaleDraft flags drafts older than 30s', () => {
-  const now = 1_000_000;
-  assert.equal(isStaleDraft(now - 31_000, now), true);
-  assert.equal(isStaleDraft(now - 10_000, now), false);
 });

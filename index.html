@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#008069">
-  <title>Ishu &amp; Sammy — Chat</title>
+  <title>S &amp; I — Chat</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%AC%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -13,9 +13,9 @@
   <div id="login-screen" class="login-wrap">
     <form id="login-form" class="login-card" autocomplete="off">
       <div class="login-logo">💬</div>
-      <h1>Ishu &amp; Sammy</h1>
+      <h1>S &amp; I</h1>
       <p class="login-sub">Sign in to chat</p>
-      <input id="login-username" type="text" placeholder="Username (Ishu or Sammy)" required>
+      <input id="login-username" type="text" placeholder="Username (S or I)" required>
       <input id="login-password" type="password" placeholder="Password" required>
       <div id="login-error" class="login-error" aria-live="polite"></div>
       <button type="submit" class="login-btn">Log in</button>
@@ -49,17 +49,13 @@
           <div id="conn-status" class="conn-status hidden">connecting…</div>
         </div>
         <div class="header-actions">
-          <span id="demo-banner" class="demo-banner hidden" title="Messages are stored only in this browser until Firebase is configured">demo mode</span>
+          <span id="local-banner" class="local-banner hidden" title="Messages are stored only in this browser">local only</span>
           <button id="mute-btn" class="icon-btn" title="Mute sounds">🔔</button>
           <button id="logout-btn" class="icon-btn" title="Log out">⏻</button>
         </div>
       </header>
 
       <main id="message-list" aria-live="polite"></main>
-
-      <div id="typing-bubble" class="typing-bubble hidden">
-        <span id="typing-from"></span><span id="typing-text"></span><span class="cursor">|</span>
-      </div>
 
       <button id="scroll-bottom" class="scroll-bottom hidden" title="Scroll to latest">↓</button>
 

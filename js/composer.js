@@ -1,16 +1,9 @@
-import { throttle } from './lib/throttle.js';
 import { replyPreviewFor } from './lib/format.js';
 import { fileToMessageData } from './lib/files.js';
 import { buildEmojiPanel } from './emoji.js';
 
-const TYPING_THROTTLE_MS = 150;
-
 export function initComposer({ els, backend, me, peer, showToast }) {
   let pendingReply = null;
-
-  const syncTyping = throttle(() => {
-    backend.setTyping(els.input.value);
-  }, TYPING_THROTTLE_MS);
 
   function autoResize() {
     els.input.style.height = 'auto';
@@ -54,7 +47,6 @@ export function initComposer({ els, backend, me, peer, showToast }) {
     clearReply();
     els.input.value = '';
     autoResize();
-    backend.setTyping('');
     els.sendBtn.disabled = true;
     try {
       await backend.sendMessage({ from: me, type: 'text', text, replyTo });
@@ -82,7 +74,7 @@ export function initComposer({ els, backend, me, peer, showToast }) {
   }
 
   // --- wiring ---
-  els.input.addEventListener('input', () => { autoResize(); syncTyping(); });
+  els.input.addEventListener('input', () => { autoResize(); });
   els.input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -103,7 +95,6 @@ export function initComposer({ els, backend, me, peer, showToast }) {
     els.input.setSelectionRange(s + emo.length, s + emo.length);
     els.input.focus();
     autoResize();
-    syncTyping();
   }));
   els.emojiBtn.addEventListener('click', (e) => {
     e.stopPropagation();

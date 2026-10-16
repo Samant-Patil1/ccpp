@@ -1,6 +1,6 @@
-import { formatTime, formatDayLabel, formatFileSize, replyPreviewFor, isStaleDraft } from './lib/format.js';
+import { formatTime, formatDayLabel, formatFileSize, replyPreviewFor } from './lib/format.js';
 
-const MUTE_KEY = 'ism.muted';
+const MUTE_KEY = 'si.muted';
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -182,16 +182,6 @@ export function initChat({ els, backend, me, peer, onRequestReply }) {
   }
 
   backend.subscribeMessages(render);
-
-  // Live typing preview from the peer.
-  backend.subscribeTyping(peer, (draft) => {
-    const show = Boolean(draft && draft.text && !isStaleDraft(draft.ts || 0));
-    els.typingBubble.classList.toggle('hidden', !show);
-    if (show) {
-      els.typingFrom.textContent = `${peer} is typing: `;
-      els.typingText.textContent = `“${draft.text}”`;
-    }
-  });
 
   els.scrollBottom.addEventListener('click', () => scrollToBottom(true));
   els.lightbox.addEventListener('click', () => els.lightbox.classList.add('hidden'));

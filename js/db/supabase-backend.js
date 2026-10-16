@@ -7,6 +7,11 @@
 
 const CHANNEL_NAME = 'chat-room';
 
+function makeId() {
+  return globalThis.crypto?.randomUUID?.()
+    ?? `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export class SupabaseBackend {
   constructor(config, me = '') {
     this.config = config;
@@ -40,12 +45,13 @@ export class SupabaseBackend {
     const { error } = await this._client
       .from('messages')
       .insert({
+        id: makeId(),
         from: this.me,
         type: partial.type,
         text: partial.text ?? null,
-        dataUrl: partial.dataUrl ?? null,
-        fileName: partial.fileName ?? null,
-        fileSize: partial.fileSize ?? null,
+        dataurl: partial.dataUrl ?? null,
+        filename: partial.fileName ?? null,
+        filesize: partial.fileSize ?? null,
         mime: partial.mime ?? null,
         replyTo: partial.replyTo ?? null,
         ts: Date.now(),

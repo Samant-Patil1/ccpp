@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createBackend } from '../js/db.js';
+import { createBackend, isPlaceholderConfig } from '../js/db.js';
 
 function fakeKv() {
   const store = new Map();
@@ -14,9 +14,17 @@ function fakeKv() {
   };
 }
 
-test('createBackend wires the local backend and reports local mode', async () => {
-  const { backend, local } = await createBackend('S', fakeKv());
-  assert.equal(local, true);
+test('isPlaceholderConfig detects the placeholder Supabase config', () => {
+  assert.equal(
+    isPlaceholderConfig({ supabaseUrl: 'https://PASTE_PROJECT_REF.supabase.co', supabaseAnonKey: 'PASTE_ANON_KEY_HERE' }),
+    true,
+  );
+  assert.equal(isPlaceholderConfig(null), true);
+});
+
+test('falls back to the local backend when Supabase cannot be reached', async () => {
+  const { backend, mode } = await createBackend('S', fakeKv());
+  assert.equal(mode, 'local');
   assert.equal(backend.kind, 'local');
 });
 

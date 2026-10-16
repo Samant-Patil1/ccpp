@@ -59,8 +59,9 @@ async function startChat(user) {
   $('peer-avatar').textContent = peer[0];
   $('peer-avatar2').textContent = peer[0];
 
-  const { backend, local } = await createBackend(user, browserKv());
-  if (local) $('local-banner').classList.remove('hidden');
+  const { backend, mode } = await createBackend(user, browserKv());
+  $('mode-banner').classList.remove('hidden');
+  $('mode-banner').textContent = mode === 'remote' ? 'live · supabase' : 'local only';
 
   backend.onConnection((online) => $('conn-status').classList.toggle('hidden', online));
 

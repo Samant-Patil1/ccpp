@@ -1,8 +1,9 @@
 # 💬 ccpp — S & I's Chat
 
 A WhatsApp-style 1:1 chat web app for exactly two users, **S** and **I**.
-Static, no build step, hosted free on GitHub Pages — and it works entirely
-without any backend.
+Static, no build step, hosted free on GitHub Pages — with or without a
+backend (Supabase keeps a permanent, multi-device history of every
+message).
 
 **Users:** `S` and `I` · **Password:** `SI96305` (shared by both)
 
@@ -23,24 +24,69 @@ without any backend.
   reply; the quoted block shows what you're replying to and can be tapped to
   jump to the original message.
 - **Responsive** — usable on phones as well as desktops.
+- **Optional Supabase storage** — paste your Supabase credentials and every
+  message is saved to (and visible from) the database, across devices.
+  Without credentials, the app keeps working exactly as before.
 
 ## Storage
 
-Messages are kept in the browser's **localStorage**. After every message the
-whole store is re-serialised to **JSON** — including the timestamp, the
-sender and the content — and written back under one key, so the browser always
-holds a complete history:
+Messages are kept wherever the backend says — localStorage by default, or
+the Supabase database once you configure it.
 
-```
-si.messages = '[{"id":"…","ts":1760000000000,"from":"S","type":"text","text":"hi"}, …]'
-```
+- **Local mode** — after every message the store is re-serialised to **JSON**
+  — including the timestamp, the sender and the content — and written back
+  under one key, so the browser always holds a complete history:
 
-Two browser tabs can chat at the same time — each tab keeps its own signed-in
-user and its own session, while both tabs share the same message store.
+  ```
+  si.messages = '[{"id":"…","ts":1760000000000,"from":"S","type":"text","text":"hi"}, …]'
+  ```
+
+  Two browser tabs can chat at the same time — each tab keeps its own signed-in
+  user and its own session, while both tabs share the same message store.
+
+- **Supabase mode** — every message is inserted into the `messages` table and
+  streamed to all open sessions, so all users see the same conversation from
+  any device. See [Configure Supabase](#configure-supabase) below.
 
 > Why not a JSON file edited on the server? GitHub Pages only *serves* files —
 > browsers cannot write back to the host. Nothing would ever persist, so
-> localStorage is the only storage that works on a static site.
+> localStorage is the fallback that always works on a static site.
+
+## Configure Supabase (optional)
+
+By default the app runs in local mode. To store messages permanently in
+Supabase (visible from every device), follow these steps once.
+
+1. **Create the table.** In the Supabase dashboard open **SQL Editor** and run:
+
+   ```sql
+   create table messages (
+     id text primary key,
+     from text not null,
+     type text not null,
+     text text,
+     dataUrl text,
+     fileName text,
+     fileSize int,
+     mime text,
+     replyTo text,
+     ts bigint not null
+   );
+   ```
+
+2. **Allow realtime.** Under **Database → Replication**, add the `messages`
+   table to the `supabase_realtime` publication (or run
+   `alter publication supabase_realtime add table messages;`).
+
+3. **Paste your credentials.** Project Settings → API shows the project URL
+   and the *publishable* key. Open `js/supabase-config.js` and replace the two
+   placeholder values with them — never paste the secret key, it is a
+   server-side credential. Commit and push.
+
+4. Reload the app: the header shows **live · supabase**, and every new
+   message is stored permanently and appears on all open sessions.
+
+While the placeholders remain, the app automatically runs in local mode.
 
 ## Setup
 
@@ -78,10 +124,14 @@ No dependencies need installing — tests use Node's built-in runner.
   picker and file attachments.
 - `js/db/local-backend.js` persists messages as a JSON array in localStorage
   and notifies every open tab about changes.
+- `js/db/supabase-backend.js` stores every message in the Supabase `messages`
+  table and streams inserts to all open sessions.
 - All user text is rendered with `textContent` — no HTML injection is possible.
 
 ## Security note
 
-This is a personal chat, not a vault. The password lives in the code, and the
-storage is local to each browser. It keeps strangers out only because they
-don't know the URL and password — don't reuse `SI96305` anywhere else.
+This is a personal chat, not a vault. The password lives in the code, and —
+once you configure Supabase — the messages live on Microsoft's servers, so
+anybody who knows the URL and password can read them. It keeps strangers out
+only because they don't know the URL and password — don't reuse `SI96305`
+anywhere else, and never commit your Supabase secret key.

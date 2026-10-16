@@ -62,14 +62,14 @@ Supabase (visible from every device), follow these steps once.
    ```sql
    create table messages (
      id text primary key,
-     from text not null,
+     "from" text not null,
      type text not null,
      text text,
      dataUrl text,
      fileName text,
      fileSize int,
      mime text,
-     replyTo text,
+     "replyTo" text,
      ts bigint not null
    );
    ```

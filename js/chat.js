@@ -93,6 +93,31 @@ export function initChat({ els, backend, me, peer, onRequestReply }) {
       if (msg.text) row.appendChild(el('span', 'msg-text', msg.text));
       row.appendChild(meta);
       bubble.appendChild(row);
+    } else if (msg.type === 'video' && msg.dataUrl) {
+      const video = el('video', 'msg-media');
+      video.src = msg.dataUrl;
+      video.controls = true;
+      video.playsInline = true;
+      video.alt = msg.fileName || 'video';
+      video.addEventListener('loadedmetadata', () => {
+        video.muted = true;
+        video.play().catch(() => {}); // autoplay preview, muted
+      });
+      bubble.appendChild(video);
+      const row = el('div', 'msg-row');
+      if (msg.text) row.appendChild(el('span', 'msg-text', msg.text));
+      row.appendChild(meta);
+      bubble.appendChild(row);
+    } else if (msg.type === 'audio' && msg.dataUrl) {
+      const audio = el('audio', 'msg-media');
+      audio.src = msg.dataUrl;
+      audio.controls = true;
+      audio.playsInline = true;
+      bubble.appendChild(audio);
+      const row = el('div', 'msg-row');
+      if (msg.text) row.appendChild(el('span', 'msg-text', msg.text));
+      row.appendChild(meta);
+      bubble.appendChild(row);
     } else if (msg.type === 'file' && msg.dataUrl) {
       const a = el('a', 'msg-file');
       a.href = msg.dataUrl;

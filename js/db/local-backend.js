@@ -16,11 +16,13 @@ export class LocalBackend {
     this._msgCbs = new Set();
     this._connCbs = new Set();
     this._unsubKv = kv.subscribe?.((key) => this._onExternal(key));
+    this._cleanupTimer = null;
   }
 
   async init() {
     queueMicrotask(() => this._emitConn(true));
     this._notifyMessages();
+    this._startCleanupTimer();
   }
 
   async sendMessage(partial) {
@@ -51,6 +53,29 @@ export class LocalBackend {
   onConnection(cb) {
     this._connCbs.add(cb);
     return () => this._connCbs.delete(cb);
+  }
+
+  // Delete messages older than `maxAgeDays` days. Runs on init and every
+  // hour while the app is open, so history doesn't grow unboundedly in
+  // localStorage.
+  async cleanupOldMessages(maxAgeDays = 30) {
+    const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+    const msgs = this._readMessages().filter((m) => m.ts >= cutoff);
+    this._writeMessages(msgs);
+    this._notifyMessages();
+  }
+
+  _startCleanupTimer() {
+    this.cleanupOldMessages();
+    if (this._cleanupTimer) clearInterval(this._cleanupTimer);
+    this._cleanupTimer = setInterval(() => this.cleanupOldMessages(), 60 * 60 * 1000);
+    this._cleanupTimer.unref?.(); // don't keep the process/tab alive
+  }
+
+  destroy() {
+    if (this._cleanupTimer) clearInterval(this._cleanupTimer);
+    this._cleanupTimer = null;
+    this._unsubKv?.();
   }
 
   _readMessages() {

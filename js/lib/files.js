@@ -62,6 +62,14 @@ export async function fileToMessageData(file, maxBytes = MAX_FILE_BYTES) {
     const dataUrl = await downscaleImage(file);
     return { type: 'image', dataUrl, fileName: file.name, fileSize: file.size, mime: file.type };
   }
+  if (file.type.startsWith('video/')) {
+    const dataUrl = await readAsDataURL(file);
+    return { type: 'video', dataUrl, fileName: file.name, fileSize: file.size, mime: file.type };
+  }
+  if (file.type.startsWith('audio/')) {
+    const dataUrl = await readAsDataURL(file);
+    return { type: 'audio', dataUrl, fileName: file.name, fileSize: file.size, mime: file.type };
+  }
   const dataUrl = await readAsDataURL(file);
   return {
     type: 'file',

@@ -92,10 +92,13 @@ async function startChat(user) {
     applyMuteIcon();
   });
 
+  const teardown = () => backend.destroy?.();
   $('logout-btn').addEventListener('click', () => {
+    teardown();
     localStorage.removeItem(sessionKey());
     location.reload();
   });
+  window.addEventListener('beforeunload', teardown);
 }
 
 $('login-form').addEventListener('submit', (e) => {

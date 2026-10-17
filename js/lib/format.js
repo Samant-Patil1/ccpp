@@ -24,6 +24,8 @@ export function formatFileSize(bytes) {
 
 export function replyPreviewFor(msg) {
   if (msg.type === 'image') return '📷 Photo';
+  if (msg.type === 'video') return '🎬 Video';
+  if (msg.type === 'audio') return '🎵 Audio';
   if (msg.type === 'file') return msg.fileName || '📎 File';
   const text = msg.text || '';
   return text.length > 60 ? text.slice(0, 60) + '…' : text;

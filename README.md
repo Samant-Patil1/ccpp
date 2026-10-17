@@ -19,11 +19,19 @@ message).
 - **Built-in emoji picker** — ~1,000 emojis in 8 categories, inserted at the
   cursor. No external services.
 - **Attachments** — photos render inline (auto-compressed to 1600px) and open
-  in a lightbox; other files send as download cards (up to ~1 MB).
+  in a lightbox; videos and audios play inline; other files (docs, PDFs, etc.)
+  send as download cards (up to ~1 MB each).
 - **Replies** — hover ↩ (desktop) or swipe right (mobile) on any message to
   reply; the quoted block shows what you're replying to and can be tapped to
-  jump to the original message.
+  jump to the original message. Works across devices via Supabase.
 - **Responsive** — usable on phones as well as desktops.
+- **Automatic message cleanup** — messages older than 30 days are removed once
+  on startup and then every hour while the app is open, so history doesn't
+  grow unboundedly (handy on Supabase's limited free tier). For a
+  server-side monthly job, schedule this SQL in the Supabase dashboard:
+  ```sql
+  delete from messages where ts < extract(epoch from now() - interval '30 days') * 1000;
+  ```
 - **Optional Supabase storage** — paste your Supabase credentials and every
   message is saved to (and visible from) the database, across devices.
   Without credentials, the app keeps working exactly as before.
